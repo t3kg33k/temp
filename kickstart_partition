@@ -1,3 +1,0 @@
-part / --fstype="xfs" --ondrive=vda --label=/ --grow
-part swap --fstype="swap" --ondrive=vda
-part /boot --fstype="xfs" --size=1024 --ondrive=vda --label=/boot
