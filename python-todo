@@ -1,0 +1,65 @@
+"""
+Objective: Create a simple to-do list application that allows users to manage their tasks.
+Key Concepts Covered: Input/Output operations, decision structures/Boolean logic, repetition, functions, and the use of lists and tuples.
+"""
+task_list = []
+
+
+def add_task(task_list):
+
+    task_title = input("Enter task title: ")
+    task_list.append(task_title)
+    task_desc = input("Enter task description: ")
+    task_list.append(task_desc)
+    print("Task added successfully")
+    return task_list
+
+
+def view_task(task_list):
+
+    for items in task_list:
+        print()
+        print("These are your tasks")
+        print("----------------------")
+        print(items)
+
+
+# def update_task():
+
+# def delete_task():
+
+
+def main():
+    menu_loop = True
+
+    while menu_loop:
+
+        print('\nSimple To-Do List')
+        print('---------------------')
+        print('1. Add Task')
+        print('2. View Task')
+        print('3. Update Task')
+        print('4. Delete Task')
+        print('5. Exit')
+        selection = int(input('Choose an option (1-5): '))
+
+        if selection == 1:
+
+            add_task(task_list)
+
+        elif selection == 2:
+            view_task(task_list)
+
+        elif selection == 3:
+            update_task()
+
+        elif selection == 4:
+            delete_task()
+
+        elif selection == 5:
+            print("Exited")
+            menu_loop = False
+
+
+if __name__ == '__main__':
+    main()
