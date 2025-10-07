@@ -1,0 +1,20 @@
+https://privatebin.net/?ca60b3ad402fbd73#5E84ATjAeByHi8VwMjg8ViJ43ZNQWubXb9iZNGd9r5cY
+
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    eno12399np0:
+      dhcp4: false
+  bridges:
+    br0:
+      interfaces: [eno12399np0]
+      macaddress: xx:xx:xx:xx:xx:xx
+      addresses:
+      - xxx.xxx.xxx.xxx/xx
+      nameservers:
+        search: [a.domain]
+        addresses: [xxx.xxx.xxx.xxx]
+      routes:
+      - to: default
+        via: xxx.xxx.xxx.xxx
