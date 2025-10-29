@@ -1,0 +1,117 @@
+#version=RHEL8
+
+# This kickstart assumes a 100GB virtual drive (vda)
+
+# Use graphical install
+#graphical
+
+# Use text install
+text
+
+repo --name="AppStream" --baseurl=file:///run/install/sources/mount-0000-cdrom/AppStream
+
+%packages
+@^minimal-environment
+kexec-tools
+
+%end
+
+# Keyboard layouts
+keyboard --xlayouts='us'
+# System language
+lang en_US.UTF-8
+
+# Network information
+network  --bootproto=dhcp --device=enp1s0 --ipv6=auto --activate
+network  --hostname=localhost.localdomain
+
+# Use CDROM installation media
+cdrom
+
+# Run the Setup Agent on first boot
+firstboot --enable
+
+ignoredisk --only-use=vda
+# System bootloader configuration
+bootloader --append="crashkernel=auto" --location=mbr --boot-drive=vda
+# Partition clearing information
+clearpart --none --initlabel
+# Disk partitioning information
+#part /boot/efi --fstype="efi" --ondisk=vda --size=1024 --fsoptions="umask=0077,shortname=winnt" --label=efi
+#part /boot --fstype="xfs" --ondisk=vda --size=2048 --label=boot
+#part /var --fstype="xfs" --ondisk=vda --size=20480 --label=var
+#part / --fstype="xfs" --ondisk=vda --size=70654 --label=root
+#part swap --fstype="swap" --ondisk=vda --size=8192
+
+part /boot --fstype=xfs --onpart=vda1
+part /boot/efi --fstype=efi --onpart=vda2 --fsoptions="defaults,uid=0,gid=0,umask=0077,shortname=winnt"
+part /var/log --fstype=xfs --onpart=vda3
+part swap --fstype=swap --onpart=vda5
+part /tmp --fstype=xfs --onpart=vda6
+part /var --fstype=xfs  --onpart=vda7
+part /var/log/audit --fstype=xfs --onpart=vda4
+part / --fstype=xfs --onpart=vda8
+
+# System timezone
+timezone America/New_York --isUtc
+
+# Root password
+rootpw --iscrypted <encrypted_pw_here>
+
+%addon com_redhat_kdump --enable --reserve-mb='auto'
+
+%end
+%anaconda
+pwpolicy root --minlen=6 --minquality=1 --notstrict --nochanges --notempty
+pwpolicy user --minlen=6 --minquality=1 --notstrict --nochanges --emptyok
+pwpolicy luks --minlen=6 --minquality=1 --notstrict --nochanges --notempty
+%end
+
+%pre
+# The following wipes and creates partitions. The above in
+# main section should match
+wipefs -a /dev/vda
+
+parted -s /dev/vda mklabel gpt
+parted -s /dev/vda mkpart primary xfs 1049kb 2gb
+parted -s /dev/vda name 1 /boot
+
+parted -s /dev/vda mkpart primary fat32 2gb 3gb
+sleep 3
+parted -s /dev/vda name 2 /boot/efi
+
+parted -s /dev/vda mkpart primary xfs 3gb 13gb
+sleep 3
+parted -s /dev/vda name 3 /var/log
+
+parted -s /dev/vda mkpart primary xfs 13gb 15gb
+sleep 3
+parted -s /dev/vda name 4 /var/log/audit
+
+parted -s /dev/vda mkpart primary linux-swap 15gb 23gb
+sleep 3
+parted -s /dev/vda name 5 swap
+
+parted -s /dev/vda mkpart primary xfs 23gb 28gb
+sleep 3
+parted -s /dev/vda name 6 /tmp
+
+parted -s /dev/vda mkpart primary xfs 28gb 38gb
+sleep 3
+parted -s /dev/vda name 7 /var
+
+parted -s /dev/vda mkpart primary xfs 38gb 88gb
+sleep 3
+parted -s /dev/vda name 8 /
+
+mkfs.xfs -f -m uuid=4df25c5b-172e-47dd-94bf-69e41a8dda03 /dev/vda1
+mkfs.vfat -i F5856A0F /dev/vda2
+mkfs.xfs -f -m uuid=7e93458d-5463-4636-811b-e42d3e66e61d /dev/vda3
+mkfs.xfs -f -m uuid=ec7fc6a9-e43a-435b-835b-8efa96df3d34 /dev/vda4
+mkfs.xfs -f -m uuid=62fa698b-3929-4b55-b258-f4252247c01f /dev/vda5
+mkfs.xfs -f -m uuid=66f8c337-3601-4b13-ac62-14cfd124849b /dev/vda6
+mkfs.xfs -f -m uuid=1cf68625-873b-43c4-aba1-bcae9c5e1db8 /dev/vda7
+mkfs.xfs -f -m finobt=0,reflink=0,uuid=f1432728-6ca5-417e-8cc1-c76016434444 /dev/vda8
+
+mkswap -L swap /dev/vda5
+%end
